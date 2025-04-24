@@ -1,0 +1,34 @@
+🧱 Structural & YAML Refactoring
+
+Introduce YAML anchors/templates for repeated queries (e.g., shared SLO logic across widgets).
+Create reusable widget templates (e.g., billboard, table, timeseries) for DRY layouts.
+Add support for multi-page dashboards in the YAML config.
+Allow metadata for widget groups or sections (e.g., group: SLOs for organizing in output or docs).
+Add support for external YAML fragment includes (e.g., include: ./partials/slo_widgets.yaml).
+📊 Dashboard Content & Metric Enhancements
+
+Add a burn rate widget for faster SLO breach detection.
+Add alert correlation widget using NrAiIncident to visualize policy activity.
+Add Apdex/performance satisfaction widget to show end-user impact.
+Add external service call latency widget to reveal upstream issues.
+Add error class breakdown widget for faster debugging.
+Use viz.heatmap or viz.histogram for latency distribution or duration analysis.
+🛠 Tooling & UX Improvements
+
+Implement layout validator to ensure no widget overlap or out-of-bounds layout.
+Support output file naming with timestamp or dashboard name (--name or --timestamp flags).
+Add --output-dir flag to write JSON into a user-defined folder.
+Emit .md or .adoc dashboard summary file that mirrors the widget layout and queries.
+Support multiple New Relic account IDs (per widget or per section).
+🔁 Code & Logic Optimization
+
+Abstract legend and facet defaults based on visual.type, instead of explicitly setting them per widget.
+Allow per-widget overrides for time windows, rather than a hardcoded SINCE value.
+Support dynamic NRQL variables (e.g., ${appName} injected via CLI or env).
+Let me know which ones you'd like to tackle first — I can:
+
+Scaffold templates,
+Add Go logic for includes and anchors,
+Expand the YAML schema,
+Or deliver test dashboards to validate visualizations.
+Let’s build a working queue!
