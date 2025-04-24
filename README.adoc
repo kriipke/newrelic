@@ -1,5 +1,6 @@
-= Service A Platform Dashboard
+= Microservice Platform Dashboard
 :toc:
+:includedir: .
 :toclevels: 2
 
 This dashboard provides high-level observability for Service A applications across environments, built using New Relic NRQL widgets.
@@ -77,4 +78,8 @@ This dashboard provides high-level observability for Service A applications acro
 
 == CONFIG
 
-include::config.yaml[]
+[source]
+----
+include::./config.yaml[]
+----
+
