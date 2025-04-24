@@ -1,100 +1,181 @@
 widgets:
-- title: SLO Compliance (All Apps)
-  viz: viz.billboard
-  column: 1
-  row: 1
-  width: 2
-  height: 2
-  query: SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100,
-    100) AS 'SLO (%)' FROM Metric FACET appName SINCE 1 hour ago
-  legend: false
-- title: Remaining Error Budget (%)
-  viz: viz.billboard
-  column: 3
-  row: 1
-  width: 2
-  height: 2
-  query: SELECT (clamp_min(clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100,100)-95,0)/(100-95))*100
-    AS 'Error Budget %' FROM Metric FACET appName SINCE 7 days ago
-  legend: false
-- title: SLO by App
-  viz: viz.table
-  column: 5
-  row: 1
-  width: 2
-  height: 2
-  query: FROM Metric SELECT clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100,
-    100) AS 'SLO (%)' FACET appName SINCE 1 hour ago
-  legend: false
-- title: Request Volume (All Apps)
-  viz: viz.area
-  column: 1
-  row: 3
-  width: 3
-  height: 2
-  query: FROM Transaction SELECT count(*) FACET appName TIMESERIES SINCE 30 minutes
-    ago
-  legend: false
-- title: Latency (p95)
-  viz: viz.line
-  column: 4
-  row: 3
-  width: 3
-  height: 2
-  query: FROM Transaction SELECT percentile(duration, 95) FACET appName TIMESERIES
+- title: "SLO Compliance (All Apps)"
+  visual:
+    type: billboard
+    legend: false
+  location:
+    col: 1
+    row: 1
+  dimensions:
+    width: 2
+    height: 2
+  query: |-
+    SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' 
+    FROM Metric 
+    FACET appName 
+    SINCE 1 hour ago
+
+- title: "Remaining Error Budget (%)"
+  visual:
+    type: billboard
+    legend: false
+  location:
+    col: 3
+    row: 1
+  dimensions:
+    width: 2
+    height: 2
+  query: |-
+    SELECT (clamp_min(clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100,100)-95,0)/(100-95))*100 AS 'Error Budget %' 
+    FROM Metric 
+    FACET appName 
+    SINCE 7 days ago
+
+- title: "SLO by App"
+  visual:
+    type: table
+    legend: false
+  location:
+    col: 5
+    row: 1
+  dimensions:
+    width: 2
+    height: 2
+  query: |-
+    FROM Metric 
+    SELECT clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100, 100) AS 'SLO (%)' 
+    FACET appName 
+    SINCE 1 hour ago
+
+- title: "Request Volume (All Apps)"
+  visual:
+    type: area
+    legend: false
+  location:
+    col: 1
+    row: 3
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM Transaction 
+    SELECT count(*) 
+    FACET appName 
+    TIMESERIES 
     SINCE 30 minutes ago
-  legend: false
-- title: '% Pods Running'
-  viz: viz.billboard
-  column: 1
-  row: 5
-  width: 3
-  height: 2
-  query: FROM K8sPodSample SELECT filter(uniqueCount(podName), WHERE status = 'Running')
-    / uniqueCount(podName) * 100 AS '% Pods Running' FACET appName SINCE 5 minutes
-    ago
-  legend: false
-- title: Pods by Status
-  viz: viz.pie
-  column: 4
-  row: 5
-  width: 3
-  height: 2
-  query: FROM K8sPodSample SELECT uniqueCount(podName) FACET status, appName SINCE
-    10 minutes ago
-  legend: true
-- title: Deployments Over Time
-  viz: viz.line
-  column: 1
-  row: 7
-  width: 3
-  height: 2
-  query: FROM Deployment SELECT count(*) FACET appName SINCE 1 day ago TIMESERIES
-  legend: false
-- title: Errors by Deployment
-  viz: viz.pie
-  column: 4
-  row: 7
-  width: 3
-  height: 2
-  query: FROM TransactionError SELECT count(*) FACET deploymentName SINCE 30 minutes
-    ago
-  legend: true
-- title: Top URIs (1h)
-  viz: viz.pie
-  column: 1
-  row: 9
-  width: 3
-  height: 2
-  query: FROM Transaction SELECT count(*) FACET request.uri LIMIT 10 SINCE 1 hour
-    ago
-  legend: true
-- title: Request Volume by App
-  viz: viz.stacked-bar
-  column: 4
-  row: 9
-  width: 3
-  height: 2
-  query: FROM Metric SELECT sum(apm.service.overview.web) FACET appName TIMESERIES
+
+- title: "Latency (p95)"
+  visual:
+    type: line
+    legend: false
+  location:
+    col: 4
+    row: 3
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM Transaction 
+    SELECT percentile(duration, 95) 
+    FACET appName 
+    TIMESERIES 
     SINCE 30 minutes ago
-  legend: true
+
+- title: "% Pods Running"
+  visual:
+    type: billboard
+    legend: false
+  location:
+    col: 1
+    row: 5
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM K8sPodSample 
+    SELECT filter(uniqueCount(podName), WHERE status = 'Running') / uniqueCount(podName) * 100 AS '% Pods Running' 
+    FACET appName 
+    SINCE 5 minutes ago
+
+- title: "Pods by Status"
+  visual:
+    type: pie
+    legend: true
+  location:
+    col: 4
+    row: 5
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM K8sPodSample 
+    SELECT uniqueCount(podName) 
+    FACET status, appName 
+    SINCE 10 minutes ago
+
+- title: "Deployments Over Time"
+  visual:
+    type: line
+    legend: false
+  location:
+    col: 1
+    row: 7
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM Deployment 
+    SELECT count(*) 
+    FACET appName 
+    SINCE 1 day ago 
+    TIMESERIES
+
+- title: "Errors by Deployment"
+  visual:
+    type: pie
+    legend: true
+  location:
+    col: 4
+    row: 7
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM TransactionError 
+    SELECT count(*) 
+    FACET deploymentName 
+    SINCE 30 minutes ago
+
+- title: "Top URIs (1h)"
+  visual:
+    type: pie
+    legend: true
+  location:
+    col: 1
+    row: 9
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM Transaction 
+    SELECT count(*) 
+    FACET request.uri 
+    LIMIT 10 
+    SINCE 1 hour ago
+
+- title: "Request Volume by App"
+  visual:
+    type: stacked-bar
+    legend: true
+  location:
+    col: 4
+    row: 9
+  dimensions:
+    width: 3
+    height: 2
+  query: |-
+    FROM Metric 
+    SELECT sum(apm.service.overview.web) 
+    FACET appName 
+    TIMESERIES 
+    SINCE 30 minutes ago
