@@ -74,3 +74,7 @@ This dashboard provides high-level observability for Service A applications acro
 - `appName` (NRQL): Select applications from recent traffic
 - `namespace` (STRING): Default to `REDACTED_NAMESPACE`
 - `clusterName` (STRING): Default to `REDACTED_CLUSTER`
+
+== CONFIG
+
+include::config.yaml[]
