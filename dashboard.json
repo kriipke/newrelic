@@ -1,0 +1,163 @@
+{
+  "name": "Service A Platform Overview",
+  "permissions": "PUBLIC_READ_WRITE",
+  "pages": [
+    {
+      "name": "Platform Health",
+      "widgets": [
+        {
+          "title": "Deployments Over Time",
+          "layout": {
+            "column": 1,
+            "row": 7,
+            "width": 3,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.line"
+          },
+          "linkedEntityGuids": null,
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  "REDACTED_ACCOUNT_ID"
+                ],
+                "query": "FROM Deployment SELECT count(*) FACET appName SINCE 1 day ago TIMESERIES"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            }
+          }
+        },
+        {
+          "title": "Errors by Deployment",
+          "layout": {
+            "column": 4,
+            "row": 7,
+            "width": 3,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.pie"
+          },
+          "linkedEntityGuids": null,
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  "REDACTED_ACCOUNT_ID"
+                ],
+                "query": "FROM TransactionError SELECT count(*) FACET deploymentName SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "facet": {
+              "showOtherSeries": true
+            }
+          }
+        },
+        {
+          "title": "Top URIs (1h)",
+          "layout": {
+            "column": 1,
+            "row": 9,
+            "width": 3,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.pie"
+          },
+          "linkedEntityGuids": null,
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  "REDACTED_ACCOUNT_ID"
+                ],
+                "query": "FROM Transaction SELECT count(*) FACET request.uri LIMIT 10 SINCE 1 hour ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "facet": {
+              "showOtherSeries": true
+            }
+          }
+        },
+        {
+          "title": "Request Volume by App",
+          "layout": {
+            "column": 4,
+            "row": 9,
+            "width": 3,
+            "height": 2
+          },
+          "visualization": {
+            "id": "viz.stacked-bar"
+          },
+          "linkedEntityGuids": null,
+          "rawConfiguration": {
+            "nrqlQueries": [
+              {
+                "accountIds": [
+                  "REDACTED_ACCOUNT_ID"
+                ],
+                "query": "FROM Metric SELECT sum(apm.service.overview.web) FACET appName TIMESERIES SINCE 30 minutes ago"
+              }
+            ],
+            "platformOptions": {
+              "ignoreTimeRange": false
+            },
+            "legend": {
+              "enabled": true
+            },
+            "facet": {
+              "showOtherSeries": false
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "variables": [
+    {
+      "name": "appName",
+      "type": "NRQL",
+      "nrqlQuery": {
+        "accountIds": [
+          "REDACTED_ACCOUNT_ID"
+        ],
+        "query": "SELECT uniques(appName) FROM Transaction SINCE 30 minutes ago"
+      },
+      "replacementStrategy": "STRING",
+      "isMultiSelection": true
+    },
+    {
+      "name": "namespace",
+      "type": "STRING",
+      "defaultValues": [
+        "REDACTED_NAMESPACE"
+      ],
+      "replacementStrategy": "STRING"
+    },
+    {
+      "name": "clusterName",
+      "type": "STRING",
+      "defaultValues": [
+        "REDACTED_CLUSTER"
+      ],
+      "replacementStrategy": "STRING"
+    }
+  ]
+}

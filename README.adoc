@@ -1,0 +1,76 @@
+= Service A Platform Dashboard
+:toc:
+:toclevels: 2
+
+This dashboard provides high-level observability for Service A applications across environments, built using New Relic NRQL widgets.
+
+== Sections & Queries
+
+=== 1. SLO Health
+
+|===
+| Widget Title | NRQL Query
+
+| SLO Compliance (All Apps)
+| `SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' FROM Metric FACET appName SINCE 1 hour ago`
+
+| Remaining Error Budget (%)
+| `SELECT (clamp_min(clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100,100)-95,0)/(100-95))*100 AS 'Error Budget %' FROM Metric FACET appName SINCE 7 days ago`
+
+| SLO by App
+| `FROM Metric SELECT clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100, 100) AS 'SLO (%)' FACET appName SINCE 1 hour ago`
+|===
+
+=== 2. Request Load & Latency
+
+|===
+| Widget Title | NRQL Query
+
+| Request Volume (All Apps)
+| `FROM Transaction SELECT count(*) FACET appName TIMESERIES SINCE 30 minutes ago`
+
+| Latency (p95)
+| `FROM Transaction SELECT percentile(duration, 95) FACET appName TIMESERIES SINCE 30 minutes ago`
+|===
+
+=== 3. Pod Health
+
+|===
+| Widget Title | NRQL Query
+
+| % Pods Running
+| `FROM K8sPodSample SELECT filter(uniqueCount(podName), WHERE status = 'Running') / uniqueCount(podName) * 100 AS '% Pods Running' FACET appName SINCE 5 minutes ago`
+
+| Pods by Status
+| `FROM K8sPodSample SELECT uniqueCount(podName) FACET status, appName SINCE 10 minutes ago`
+|===
+
+=== 4. Deployment Impact & Errors
+
+|===
+| Widget Title | NRQL Query
+
+| Deployments Over Time
+| `FROM Deployment SELECT count(*) FACET appName SINCE 1 day ago TIMESERIES`
+
+| Errors by Deployment
+| `FROM TransactionError SELECT count(*) FACET deploymentName SINCE 30 minutes ago`
+|===
+
+=== 5. Traffic Patterns
+
+|===
+| Widget Title | NRQL Query
+
+| Top URIs (1h)
+| `FROM Transaction SELECT count(*) FACET request.uri LIMIT 10 SINCE 1 hour ago`
+
+| Request Volume by App
+| `FROM Metric SELECT sum(apm.service.overview.web) FACET appName TIMESERIES SINCE 30 minutes ago`
+|===
+
+== Variables
+
+- `appName` (NRQL): Select applications from recent traffic
+- `namespace` (STRING): Default to `REDACTED_NAMESPACE`
+- `clusterName` (STRING): Default to `REDACTED_CLUSTER`
