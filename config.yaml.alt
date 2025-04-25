@@ -1,0 +1,97 @@
+  &slo_percent
+- title: "SLO Compliance (All Apps)"
+  query: |-
+    SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' 
+    FROM Metric 
+    FACET appName 
+    SINCE 1 hour ago
+  visual:
+    type: billboard
+    legend: false
+
+  &slo_percent
+  query: |-
+    SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' 
+    FROM Metric 
+    FACET appName 
+    SINCE 1 hour ago
+  visual:
+    type: billboard
+    legend: false
+
+  &slo_percent
+  query: |-
+    SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' 
+    FROM Metric 
+    FACET appName 
+    SINCE 1 hour ago
+  visual:
+    type: billboard
+    legend: false
+
+layout:
+- 
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+- 
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+- 
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
+
+  - title: "SLO Compliance (All Apps)"
+    query: *slo_percent
+    flex-basis: 1
+    dimensions:
+      width: 2
+      height: 2
