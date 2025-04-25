@@ -1,0 +1,54 @@
+name: Generate Dashboards and Mockups
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.21'
+
+      - name: Build dashboard generator
+        run: go build -o dashboard-gen main.go
+
+      - name: Generate dashboard JSON
+        run: |
+          mkdir -p dashboards
+          ./dashboard-gen \
+            --account "5555555" \
+            --config config.yaml \
+            --template templates.yaml \
+            --output dashboards/generated_dashboard.json \
+            --name "Service A Platform Overview"
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install PyYAML
+        run: pip install pyyaml
+
+      - name: Generate mockup HTML
+        run: |
+          chmod +x ./generate_mockup.py
+          ./generate_mockup.py config.yaml dashboards/mockup.html
+
+      - name: Upload dashboards and mockup
+        uses: actions/upload-artifact@v3
+        with:
+          name: dashboards-and-mockup
+          path: dashboards/
