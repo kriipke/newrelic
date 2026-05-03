@@ -1,85 +1,206 @@
-= Microservice Platform Dashboard
+= NRQL Dashboard Generator
 :toc:
-:includedir: .
 :toclevels: 2
 
-This dashboard provides high-level observability for Service A applications across environments, built using New Relic NRQL widgets.
+A dashboards-as-code compiler for New Relic. Define observability dashboards in concise YAML, compile them to New Relic's API-ready JSON, and manage them through the same Git workflows you already use for infrastructure.
 
-== Sections & Queries
+== Why
 
-=== 1. SLO Health
+Observability dashboards are infrastructure. They encode institutional knowledge about what to watch, how systems fail, and what thresholds matter. Leaving that knowledge locked inside the New Relic UI means no version history, no peer review, no reproducibility, and no way to guarantee consistency across teams or accounts.
+
+This tool treats dashboards the same way Terraform treats cloud resources: source-controlled, reviewable, and repeatable.
+
+== What you get
+
+=== Version-controlled dashboards
+
+Every dashboard definition lives in a YAML file in Git. Changes produce diffs. Diffs produce pull requests. Pull requests produce review. You get a full history of who changed what query, when, and why — without relying on New Relic's own audit trail (which only shows the final JSON blob, not the intent).
+
+=== Cross-account consistency
+
+Organizations running multiple New Relic accounts — separate environments, separate business units, separate regions — typically rebuild dashboards by hand in each one. This tool accepts a `--account` flag at compile time, so the same YAML config generates correct JSON for any account. One source of truth, many deployments.
+
+=== Drift prevention
+
+When someone edits a dashboard directly in the New Relic UI, that change lives outside version control and silently diverges from the YAML. Because the generated JSON is a deterministic compilation of the YAML, you can diff the API's current state against the repo's expected output to detect and revert manual overrides.
+
+=== Faster onboarding
+
+New team members don't need to learn the New Relic dashboard builder. They read the YAML, understand the NRQL queries, and submit a PR. The widget layout, visualization types, and NRQL syntax are all visible in one file — no clicking through a multi-step UI to understand what a dashboard actually shows.
+
+=== Repeatable disaster recovery
+
+If a dashboard is accidentally deleted or an account is migrated, recreating it means running one command against the YAML that was already in Git. No reconstruction from screenshots or memory.
+
+=== Single compilation source for multiple outputs
+
+The YAML is the canonical definition. From it, this tool generates the JSON that New Relic's API accepts. That same YAML can drive documentation generation, validation linting, and HTML mockup previews — all from one source of truth.
+
+== How it works
+
+.The compilation pipeline
+image::pipeline.svg[Pipeline,align=center]
+
+1. Write widget definitions in `config.yaml` using a slim schema — title, visualization type, layout position, and NRQL query.
+2. Run the compiler with a target account ID.
+3. Out comes `generated_dashboard_v2.json` — the full JSON payload the New Relic Dashboards API expects, with all wrapper fields, default blocks, and configuration wiring filled in.
+
+The YAML is roughly 5x more concise than the output JSON. Constants like `linkedEntityGuids`, `platformOptions`, and `accountIds` are generated automatically — you only specify what actually varies per widget.
+
+== Quick start
+
+=== Prerequisites
+
+- Go 1.23+
+- A New Relic account ID
+
+=== Build
+
+[source,bash]
+----
+go build -o dashboard-gen main.go
+----
+
+=== Generate
+
+[source,bash]
+----
+./dashboard-gen --account <YOUR_ACCOUNT_ID>
+----
+
+This reads `config.yaml` and writes `generated_dashboard_v2.json`.
+
+=== Deploy to New Relic
+
+[source,bash]
+----
+curl -X POST https://api.newrelic.com/v2/dashboards.json \
+  -H "X-Api-Key: $NEW_RELIC_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d @generated_dashboard_v2.json
+----
+
+== YAML reference
+
+=== Widget definition
+
+[source,yaml]
+----
+widgets:
+  - title: "SLO Compliance (All Apps)"
+    visual:
+      type: billboard        # Visualization type: billboard, line, area, pie, table, stacked-bar
+      legend: false          # true adds legend + facet "show other series" blocks automatically
+    location:
+      col: 1                 # Column position (1-based)
+      row: 1                 # Row position (1-based)
+    dimensions:
+      width: 2               # Widget width in grid units
+      height: 2              # Widget height in grid units
+    query: |-
+      SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)'
+      FROM Metric
+      FACET appName
+      SINCE 1 hour ago
+----
+
+=== Visualization types
 
 |===
-| Widget Title | NRQL Query
+| Type | Use case
 
-| SLO Compliance (All Apps)
-| `SELECT clamp_max(sum(newrelic.sli.good) / sum(newrelic.sli.valid) * 100, 100) AS 'SLO (%)' FROM Metric FACET appName SINCE 1 hour ago`
-
-| Remaining Error Budget (%)
-| `SELECT (clamp_min(clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100,100)-95,0)/(100-95))*100 AS 'Error Budget %' FROM Metric FACET appName SINCE 7 days ago`
-
-| SLO by App
-| `FROM Metric SELECT clamp_max(sum(newrelic.sli.good)/sum(newrelic.sli.valid)*100, 100) AS 'SLO (%)' FACET appName SINCE 1 hour ago`
+| `billboard` | Single metric, big number display
+| `line` | Metric over time
+| `area` | Volume over time with fill
+| `pie` | Categorical breakdown
+| `table` | Faceted data in rows
+| `stacked-bar` | Stacked volume over time
 |===
 
-=== 2. Request Load & Latency
+=== Legend coupling
+
+Setting `legend: true` automatically injects both the `legend` and `facet` configuration blocks into the output JSON, since faceted charts almost always need both. One boolean covers the common case without exposing the underlying API coupling.
+
+=== Dashboard variables
+
+The compiler injects three dashboard variables automatically:
 
 |===
-| Widget Title | NRQL Query
+| Variable | Type | Purpose
 
-| Request Volume (All Apps)
-| `FROM Transaction SELECT count(*) FACET appName TIMESERIES SINCE 30 minutes ago`
-
-| Latency (p95)
-| `FROM Transaction SELECT percentile(duration, 95) FACET appName TIMESERIES SINCE 30 minutes ago`
+| `appName` | NRQL | Dynamic dropdown populated from recent traffic
+| `namespace` | STRING | Kubernetes namespace filter
+| `clusterName` | STRING | Kubernetes cluster filter
 |===
 
-=== 3. Pod Health
+Update the default values for `namespace` and `clusterName` in `main.go` to match your environment before building.
+
+== Included dashboard
+
+The repository ships with a platform overview dashboard covering five areas:
+
+=== SLO Health
 
 |===
-| Widget Title | NRQL Query
+| Widget | Visualization | Description
 
-| % Pods Running
-| `FROM K8sPodSample SELECT filter(uniqueCount(podName), WHERE status = 'Running') / uniqueCount(podName) * 100 AS '% Pods Running' FACET appName SINCE 5 minutes ago`
-
-| Pods by Status
-| `FROM K8sPodSample SELECT uniqueCount(podName) FACET status, appName SINCE 10 minutes ago`
+| SLO Compliance (All Apps) | Billboard | Current SLO percentage faceted by application
+| Remaining Error Budget (%) | Billboard | How much error budget remains before SLO breach
+| SLO by App | Table | Per-application SLO breakdown
 |===
 
-=== 4. Deployment Impact & Errors
+=== Request Load and Latency
 
 |===
-| Widget Title | NRQL Query
+| Widget | Visualization | Description
 
-| Deployments Over Time
-| `FROM Deployment SELECT count(*) FACET appName SINCE 1 day ago TIMESERIES`
-
-| Errors by Deployment
-| `FROM TransactionError SELECT count(*) FACET deploymentName SINCE 30 minutes ago`
+| Request Volume (All Apps) | Area | Transaction count over time per application
+| Latency (p95) | Line | 95th percentile response time per application
 |===
 
-=== 5. Traffic Patterns
+=== Pod Health
 
 |===
-| Widget Title | NRQL Query
+| Widget | Visualization | Description
 
-| Top URIs (1h)
-| `FROM Transaction SELECT count(*) FACET request.uri LIMIT 10 SINCE 1 hour ago`
-
-| Request Volume by App
-| `FROM Metric SELECT sum(apm.service.overview.web) FACET appName TIMESERIES SINCE 30 minutes ago`
+| % Pods Running | Billboard | Percentage of pods in Running state
+| Pods by Status | Pie | Pod distribution across status values
 |===
 
-== Variables
+=== Deployment Impact and Errors
 
-- `appName` (NRQL): Select applications from recent traffic
-- `namespace` (STRING): Default to `REDACTED_NAMESPACE`
-- `clusterName` (STRING): Default to `REDACTED_CLUSTER`
+|===
+| Widget | Visualization | Description
 
-== CONFIG
+| Deployments Over Time | Line | Deployment frequency per application
+| Errors by Deployment | Pie | Error count faceted by deployment name
+|===
+
+=== Traffic Patterns
+
+|===
+| Widget | Visualization | Description
+
+| Top URIs (1h) | Pie | Most-hit endpoints in the last hour
+| Request Volume by App | Stacked bar | Throughput breakdown per application
+|===
+
+== Project structure
 
 [source]
 ----
-include::./config.yaml[]
+.
+├── main.go                              # Compiler: YAML in, JSON out
+├── config.yaml                          # Dashboard definition (source of truth)
+├── go.mod / go.sum                      # Go module (single dependency: yaml.v3)
+├── dashboards/
+│   └── generated_dashboard_v2.json      # Compiled output
+├── README.adoc                          # This file
+├── ROADMAP.adoc                         # Planned improvements
+└── .github/workflows/
+    └── mockups.yaml                     # CI: build + generate on push to main
 ----
 
+== Roadmap
+
+See link:ROADMAP.adoc[ROADMAP.adoc] for planned improvements including YAML anchors for query reuse, multi-page dashboards, external YAML includes, layout validation, and HTML mockup previews.
