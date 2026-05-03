@@ -1,4 +1,4 @@
-= NRQL Dashboard Generator
+= New Relic Cross-Environment Dashboard Generator
 :toc:
 :toclevels: 2
 
@@ -13,6 +13,14 @@ Observability dashboards are infrastructure. They
 . this dashboard-as-code generator ensures, for example, a dashboard showing the latency of service A in dev can meaningfully be compared to the latency of service A in the QA environment because the dashboards were generated in an identical manner.
 
 This tool treats dashboards the same way Terraform treats cloud resources: source-controlled, reviewable, and repeatable.
+
+== Who is This For?
+
+This is for shops that generally have these two characteristics:
+
+. you're running a platform on kubernetes that contains multiple microservices
+. you're using New Relic to monitor those services
+. you've created a different New Relic account for each environment you have, e.g. the dev environment is 123456, the qa environment is 123457, etc.
 
 == Features & Benefits
 
