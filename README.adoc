@@ -4,13 +4,19 @@
 
 A dashboards-as-code compiler for New Relic. Define observability dashboards in concise YAML, compile them to New Relic's API-ready JSON, and manage them through the same Git workflows you already use for infrastructure.
 
-== Why
+== Dashboards-as-Code
 
-Observability dashboards are infrastructure. They encode institutional knowledge about what to watch, how systems fail, and what thresholds matter. Leaving that knowledge locked inside the New Relic UI means no version history, no peer review, no reproducibility, and no way to guarantee consistency across teams or accounts.
+Observability dashboards are infrastructure. They 
+
+. encode institutional knowledge about what to watch, how systems fail, and what thresholds matter. Leaving that knowledge locked inside the New Relic UI means no version history, no peer review, no reproducibility, and no way to guarantee consistency across teams or accounts.
+. ensure consistent deployment of the dashboards themselves across environments - the dashboards tend to be large complex JSON objects that themselves can contain sets of very complex queries. For that reason any deviationn in the JSON from one environment to the next could result in comparing dating in an erroneous manner leading to the next point.
+. this dashboard-as-code generator ensures, for example, a dashboard showing the latency of service A in dev can meaningfully be compared to the latency of service A in the QA environment because the dashboards were generated in an identical manner.
 
 This tool treats dashboards the same way Terraform treats cloud resources: source-controlled, reviewable, and repeatable.
 
-== What you get
+== Features & Benefits
+
+Below are the 
 
 === Version-controlled dashboards
 
